@@ -409,6 +409,8 @@
   "perfil.permissionDenied": "Missing permission — contact administrator",
   "perfil.saveUsernameError": "Error saving username",
   "perfil.changeAvatar": "Change profile photo",
+  "perfil.avatarUploadError": "Error uploading image",
+  "perfil.avatarSaveError": "Error saving image",
   "perfil.editUsername": "Edit username",
   "nav.themeLightShort": "Light",
   "nav.themeDarkShort": "Dark",

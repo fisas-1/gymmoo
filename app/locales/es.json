@@ -409,6 +409,8 @@
   "perfil.permissionDenied": "Falta permiso — contacta al administrador",
   "perfil.saveUsernameError": "Error al guardar el nombre de usuario",
   "perfil.changeAvatar": "Cambiar foto de perfil",
+  "perfil.avatarUploadError": "Error al subir imagen",
+  "perfil.avatarSaveError": "Error al guardar imagen",
   "perfil.editUsername": "Editar nombre de usuario",
   "nav.themeLightShort": "Claro",
   "nav.themeDarkShort": "Oscuro",

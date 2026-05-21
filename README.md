@@ -55,7 +55,7 @@ Obrir [http://localhost:3000](http://localhost:3000) amb el navegador.
 ## Estructura del Projecte
 
 ```
-smartgym/
+gymmoo/
 ├── app/                      # Next.js App Router
 │   ├── page.tsx             # Pàgina principal (entrenaments)
 │   ├── rutines/page.tsx     # Gestor de rutines

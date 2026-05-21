@@ -48,8 +48,6 @@ const LEVEL_TO_NUM: Record<string, number> = {
 }
 
 type ExerciseLevel = { exercise: string; level: string; levelColor: string; oneRM: number; isUnilateral?: boolean }
-type FavoriteRoutine = { id: string; name: string; description?: string }
-type DeletedRoutine = { id: string; name: string; description?: string; exercises: { exercise: string; sets_target: number; reps_min: number; reps_max: number; order_index: number }[]; deletedAt: string }
 
 export default function PerfilPage() {
   const { user, signOut } = useAuth()
@@ -72,11 +70,6 @@ export default function PerfilPage() {
   const [overallAvgPct, setOverallAvgPct] = useState<number>(0)
   const [streak, setStreak] = useState<number>(0)
   const [scheduledDaysCount, setScheduledDaysCount] = useState<number>(0)
-  const [favoriteRoutines, setFavoriteRoutines] = useState<FavoriteRoutine[]>([])
-  const [deletedRoutines, setDeletedRoutines] = useState<DeletedRoutine[]>([])
-  const [restoreMsg, setRestoreMsg] = useState<string | null>(null)
-  const [showFavorites, setShowFavorites] = useState(false)
-  const [showDeleted, setShowDeleted] = useState(false)
   const [username, setUsername] = useState('')
   const [editingUsername, setEditingUsername] = useState(false)
   const [usernameInput, setUsernameInput] = useState('')
@@ -84,6 +77,7 @@ export default function PerfilPage() {
   const [savingUsername, setSavingUsername] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null)
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
+  const [avatarError, setAvatarError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -93,7 +87,7 @@ export default function PerfilPage() {
 
   useEffect(() => { loadProfile() }, [unit, heightUnit])
   useEffect(() => { if (weight) calculateLevels() }, [weight, gender, user])
-  useEffect(() => { if (user) { loadFavoritesAndDeleted(); calculateStreak(); loadUserProfile() } }, [user])
+  useEffect(() => { if (user) { calculateStreak(); loadUserProfile() } }, [user])
 
   function setHeightUnit(u: 'cm' | 'ftin') {
     if (u === 'ftin' && height) {
@@ -272,48 +266,6 @@ export default function PerfilPage() {
     setStreak(sessions)
   }
 
-  async function loadFavoritesAndDeleted() {
-    if (!user) return
-    const favIds: string[] = JSON.parse(localStorage.getItem('favorite_routine_ids') || '[]')
-    if (favIds.length > 0) {
-      const { data } = await supabase.from('routines').select('id, name, description').in('id', favIds).eq('user_id', user.id)
-      setFavoriteRoutines(data || [])
-    } else {
-      setFavoriteRoutines([])
-    }
-    const deleted: DeletedRoutine[] = JSON.parse(localStorage.getItem('deleted_routines') || '[]')
-    setDeletedRoutines(deleted)
-  }
-
-  async function handleRestoreRoutine(dr: DeletedRoutine) {
-    if (!user) return
-    const { data: newRoutine, error } = await supabase
-      .from('routines')
-      .insert({ user_id: user.id, name: dr.name, description: dr.description || '' })
-      .select()
-      .single()
-    if (error || !newRoutine) return
-
-    for (let i = 0; i < dr.exercises.length; i++) {
-      const ex = dr.exercises[i]
-      const { data: newEx } = await supabase
-        .from('routine_exercises')
-        .insert({ routine_id: newRoutine.id, exercise: ex.exercise, sets_target: ex.sets_target, reps_min: ex.reps_min, reps_max: ex.reps_max, order_index: i })
-        .select()
-        .single()
-      if (newEx) {
-        const sets = Array.from({ length: ex.sets_target }, (_, k) => ({ routine_exercise_id: newEx.id, set_number: k + 1, completed: false }))
-        await supabase.from('routine_sets').insert(sets)
-      }
-    }
-
-    const remaining = deletedRoutines.filter(d => d.id !== dr.id)
-    setDeletedRoutines(remaining)
-    localStorage.setItem('deleted_routines', JSON.stringify(remaining))
-    setRestoreMsg(t('routines.restored'))
-    setTimeout(() => setRestoreMsg(null), 3000)
-  }
-
   async function loadUserProfile() {
     if (!user) return
     const { data } = await supabase
@@ -369,6 +321,7 @@ export default function PerfilPage() {
     const file = e.target.files?.[0]
     if (!file || !user) return
     setUploadingAvatar(true)
+    setAvatarError(null)
 
     const ext = file.name.split('.').pop() || 'jpg'
     const path = `${user.id}/avatar.${ext}`
@@ -379,6 +332,7 @@ export default function PerfilPage() {
 
     if (uploadError) {
       console.error('Avatar upload error:', uploadError)
+      setAvatarError(t('perfil.avatarUploadError'))
     } else {
       const { data: urlData } = supabase.storage
         .from('avatars')
@@ -387,8 +341,12 @@ export default function PerfilPage() {
       const { error: updateError } = await supabase
         .from('profiles')
         .upsert({ id: user.id, avatar_url: url }, { onConflict: 'id' })
-      if (!updateError || updateError.message?.includes('schema cache')) setAvatarUrl(url)
-      else console.error('Avatar url save error:', updateError)
+      if (!updateError) {
+        setAvatarUrl(url)
+      } else {
+        console.error('Avatar url save error:', updateError)
+        setAvatarError(t('perfil.avatarSaveError'))
+      }
     }
 
     if (fileInputRef.current) fileInputRef.current.value = ''
@@ -449,7 +407,7 @@ export default function PerfilPage() {
                 className="w-16 h-16 rounded-2xl overflow-hidden flex items-center justify-center text-2xl font-semibold select-none relative"
                 style={{
                   backgroundColor: 'var(--card-hi)',
-                  border: streak > 0 ? '1px solid color-mix(in srgb, var(--accent) 40%, transparent)' : '1px solid var(--rule)',
+                  border: avatarError ? '1px solid var(--danger)' : streak > 0 ? '1px solid color-mix(in srgb, var(--accent) 40%, transparent)' : '1px solid var(--rule)',
                   color: 'var(--accent)',
                 }}
               >
@@ -470,6 +428,9 @@ export default function PerfilPage() {
                 </div>
               </div>
             </label>
+            {avatarError && (
+              <p className="text-[10px] text-[var(--danger)] mt-1 text-center w-16 leading-tight">{avatarError}</p>
+            )}
             <div
               className="absolute -bottom-1.5 -right-1.5 font-mono text-[10px] font-medium px-1.5 py-0.5 rounded-md tabular-nums text-white"
               style={{ backgroundColor: 'var(--accent)' }}
@@ -742,96 +703,6 @@ export default function PerfilPage() {
             {saved ? `✓ ${t('perfil.saved')}` : t('perfil.save')}
           </button>
         </div>
-
-        {/* Favorites + deleted routines */}
-        {(favoriteRoutines.length > 0 || deletedRoutines.length > 0) && (
-          <div className="space-y-2">
-            {favoriteRoutines.length > 0 && (
-              <div className="card-surface overflow-hidden">
-                <button
-                  onClick={() => setShowFavorites(v => !v)}
-                  className="flex items-center justify-between w-full px-4 py-3"
-                >
-                  <span className="section-label">
-                    {t('routines.favoriteRoutines')} ({favoriteRoutines.length})
-                  </span>
-                  <svg
-                    width="10" height="10" viewBox="0 0 12 12" fill="currentColor"
-                    className={`transition-transform duration-200 text-[var(--text-3)] ${showFavorites ? 'rotate-180' : ''}`}
-                  >
-                    <path d="M6 8L1 3h10L6 8z" />
-                  </svg>
-                </button>
-                {showFavorites && (
-                  <div className="px-4 pb-3 space-y-2">
-                    {favoriteRoutines.map(r => (
-                      <div
-                        key={r.id}
-                        className="flex items-center gap-3 py-2.5 px-3 rounded-xl"
-                        style={{ backgroundColor: 'var(--card-hi)', border: '1px solid var(--rule)' }}
-                      >
-                        <span className="flex-shrink-0 text-sm" style={{ color: 'var(--accent)' }}>★</span>
-                        <span className="text-sm font-medium truncate text-[var(--text)]">{r.name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {deletedRoutines.length > 0 && (
-              <div className="card-surface overflow-hidden">
-                <button
-                  onClick={() => setShowDeleted(v => !v)}
-                  className="flex items-center justify-between w-full px-4 py-3"
-                >
-                  <span className="section-label">
-                    {t('routines.deletedRoutines')} ({deletedRoutines.length})
-                  </span>
-                  <svg
-                    width="10" height="10" viewBox="0 0 12 12" fill="currentColor"
-                    className={`transition-transform duration-200 text-[var(--text-3)] ${showDeleted ? 'rotate-180' : ''}`}
-                  >
-                    <path d="M6 8L1 3h10L6 8z" />
-                  </svg>
-                </button>
-                {showDeleted && (
-                  <div className="px-4 pb-3 space-y-2">
-                    {deletedRoutines.map(dr => (
-                      <div
-                        key={dr.id + dr.deletedAt}
-                        className="flex items-center justify-between gap-2 py-2.5 px-3 rounded-xl"
-                        style={{ backgroundColor: 'var(--card-hi)', border: '1px solid var(--rule)' }}
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate text-[var(--text)]">{dr.name}</p>
-                          <p className="font-mono text-xs text-[var(--text-3)]">
-                            {t('routines.exercisesCount', { count: String(dr.exercises.length) })}
-                          </p>
-                        </div>
-                        <button
-                          onClick={() => handleRestoreRoutine(dr)}
-                          className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all hover:opacity-80 active:scale-95"
-                          style={{
-                            backgroundColor: 'color-mix(in srgb, var(--accent) 10%, transparent)',
-                            color: 'var(--accent)',
-                            border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
-                          }}
-                        >
-                          {t('routines.restore')}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {restoreMsg && (
-              <p className="text-sm px-1 font-medium" style={{ color: 'var(--good)' }}>{restoreMsg}</p>
-            )}
-          </div>
-        )}
 
         {/* Preferences */}
         <div>

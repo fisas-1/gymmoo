@@ -26,14 +26,6 @@ function SortableExerciseItem({ id, children }: { id: string; children: (handleP
 
 type CustomExercises = string[]
 
-type DeletedRoutine = {
-  id: string
-  name: string
-  description?: string
-  exercises: { exercise: string; sets_target: number; reps_min: number; reps_max: number; order_index: number }[]
-  deletedAt: string
-}
-
 export default function RutinesPage() {
   const { user } = useAuth()
   const { t, locale } = useTranslation()
@@ -81,6 +73,7 @@ export default function RutinesPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [routineDays, setRoutineDays] = useState<Record<string, number[]>>({})
   const [activeTab, setActiveTab] = useState<'all' | 'fav' | 'deleted'>('all')
+  const [deletedRoutines, setDeletedRoutines] = useState<{ id: string; name: string; deleted_at: string }[]>([])
 
   const allExercises = [...DEFAULT_EXERCISES, ...customExercises]
 
@@ -121,11 +114,8 @@ export default function RutinesPage() {
   useEffect(() => {
     if (user) {
       loadRoutines()
+      loadDeletedRoutines()
       loadCustomExercises()
-      const saved = localStorage.getItem('favorite_routine_ids')
-      if (saved) setFavoriteIds(JSON.parse(saved))
-      const savedDays = localStorage.getItem('routine_days')
-      if (savedDays) setRoutineDays(JSON.parse(savedDays))
     }
   }, [user])
 
@@ -139,7 +129,7 @@ export default function RutinesPage() {
       const current = prev[routineId] || []
       const next = current.includes(day) ? current.filter(d => d !== day) : [...current, day].sort((a, b) => a - b)
       const updated = { ...prev, [routineId]: next }
-      localStorage.setItem('routine_days', JSON.stringify(updated))
+      supabase.from('routines').update({ scheduled_days: next }).eq('id', routineId)
       return updated
     })
   }
@@ -207,6 +197,7 @@ export default function RutinesPage() {
       .from('routines')
       .select('*')
       .eq('user_id', user.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
     if (error) {
@@ -226,6 +217,8 @@ export default function RutinesPage() {
           })
         : data
       setRoutines(ordered)
+      setFavoriteIds(data.filter(r => r.is_favorite).map(r => r.id))
+      setRoutineDays(Object.fromEntries(data.map(r => [r.id, r.scheduled_days || []])))
       const counts: Record<string, number> = {}
       for (const routine of data) {
         const { count } = await supabase
@@ -236,6 +229,24 @@ export default function RutinesPage() {
       }
       setRoutineExerciseCounts(counts)
     }
+  }
+
+  async function loadDeletedRoutines() {
+    if (!user) return
+    const { data } = await supabase
+      .from('routines')
+      .select('id, name, deleted_at')
+      .eq('user_id', user.id)
+      .not('deleted_at', 'is', null)
+      .order('deleted_at', { ascending: false })
+    setDeletedRoutines(data || [])
+  }
+
+  async function handleRestoreRoutine(routineId: string) {
+    await supabase.from('routines').update({ deleted_at: null }).eq('id', routineId)
+    loadRoutines()
+    loadDeletedRoutines()
+    setSuccessMsg(t('routines.restored'))
   }
 
   async function loadRoutineExercises(routineId: string): Promise<RoutineExercise[]> {
@@ -388,49 +399,28 @@ export default function RutinesPage() {
     setSuccessMsg(t('routines.updated'))
   }
 
-  function toggleFavorite(routineId: string) {
-    const next = favoriteIds.includes(routineId)
-      ? favoriteIds.filter(id => id !== routineId)
-      : [...favoriteIds, routineId]
+  async function toggleFavorite(routineId: string) {
+    const isFav = favoriteIds.includes(routineId)
+    const next = isFav ? favoriteIds.filter(id => id !== routineId) : [...favoriteIds, routineId]
     setFavoriteIds(next)
-    localStorage.setItem('favorite_routine_ids', JSON.stringify(next))
-    setSuccessMsg(favoriteIds.includes(routineId) ? t('routines.removedFromFavorites') : t('routines.addedToFavorites'))
+    await supabase.from('routines').update({ is_favorite: !isFav }).eq('id', routineId)
+    setSuccessMsg(isFav ? t('routines.removedFromFavorites') : t('routines.addedToFavorites'))
   }
 
   async function handleDeleteRoutine() {
     if (!editingRoutine) return
     setLoading(true)
 
-    const { data: exs } = await supabase
-      .from('routine_exercises')
-      .select('id, exercise, sets_target, reps_min, reps_max, order_index')
-      .eq('routine_id', editingRoutine.id)
-      .order('order_index', { ascending: true })
-
-    const deletedEntry: DeletedRoutine = {
-      id: editingRoutine.id,
-      name: editingRoutine.name,
-      description: editingRoutine.description,
-      exercises: exs || [],
-      deletedAt: new Date().toISOString(),
-    }
-    const existing = JSON.parse(localStorage.getItem('deleted_routines') || '[]') as DeletedRoutine[]
-    localStorage.setItem('deleted_routines', JSON.stringify([deletedEntry, ...existing].slice(0, 20)))
-
-    await supabase.from('routine_sets').delete().in(
-      'routine_exercise_id',
-      (exs || []).map((e: any) => e.id).filter(Boolean)
-    )
-    await supabase.from('routine_exercises').delete().eq('routine_id', editingRoutine.id)
-    const { error } = await supabase.from('routines').delete().eq('id', editingRoutine.id)
+    const { error } = await supabase
+      .from('routines')
+      .update({ deleted_at: new Date().toISOString(), is_favorite: false })
+      .eq('id', editingRoutine.id)
 
     setLoading(false)
     if (error) { setErrorMsg(t('routines.errorDeleting')); return }
 
     if (favoriteIds.includes(editingRoutine.id)) {
-      const next = favoriteIds.filter(id => id !== editingRoutine.id)
-      setFavoriteIds(next)
-      localStorage.setItem('favorite_routine_ids', JSON.stringify(next))
+      setFavoriteIds(prev => prev.filter(id => id !== editingRoutine.id))
     }
 
     setShowDeleteConfirm(false)
@@ -439,6 +429,7 @@ export default function RutinesPage() {
     setEditRoutineName('')
     setSuccessMsg(t('routines.deleted'))
     loadRoutines()
+    loadDeletedRoutines()
   }
 
   function handleOpenEditExercise(exercise: RoutineExercise) {
@@ -799,9 +790,6 @@ export default function RutinesPage() {
 
   // ── LIST VIEW ────────────────────────────────────────────────
   if (!selectedRoutine) {
-    const deletedRoutines: DeletedRoutine[] = (() => {
-      try { return JSON.parse(localStorage.getItem('deleted_routines') || '[]') } catch { return [] }
-    })()
 
     const filteredRoutines = activeTab === 'fav'
       ? routines.filter(r => favoriteIds.includes(r.id))
@@ -901,13 +889,26 @@ export default function RutinesPage() {
                 {deletedRoutines.map((dr, idx) => (
                   <div
                     key={dr.id}
-                    className="card-surface px-4 py-3 opacity-60"
+                    className="card-surface px-4 py-3 flex items-center justify-between gap-3"
                     style={{ animation: `dopSlideUp 500ms ${idx * 70}ms cubic-bezier(.22,1,.36,1) both` }}
                   >
-                    <p className="text-[var(--text)] font-medium text-[15px] truncate">{dr.name}</p>
-                    <p className="text-[var(--text-3)] font-mono text-[10px] mt-0.5">
-                      {t('routines.exercisesCount', { count: String(dr.exercises?.length || 0) })} · {new Date(dr.deletedAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-[var(--text)] font-medium text-[15px] truncate">{dr.name}</p>
+                      <p className="text-[var(--text-3)] font-mono text-[10px] mt-0.5">
+                        {new Date(dr.deleted_at).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => handleRestoreRoutine(dr.id)}
+                      className="flex-shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-all hover:opacity-80 active:scale-95"
+                      style={{
+                        backgroundColor: 'color-mix(in srgb, var(--accent) 10%, transparent)',
+                        color: 'var(--accent)',
+                        border: '1px solid color-mix(in srgb, var(--accent) 25%, transparent)',
+                      }}
+                    >
+                      {t('routines.restore')}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -1022,13 +1023,6 @@ export default function RutinesPage() {
                 </DndContext>
               )}
 
-              <button
-                onClick={() => setShowRoutineModal(true)}
-                className="w-full mt-3 py-4 rounded-2xl text-sm font-medium border-2 border-dashed transition-colors"
-                style={{ borderColor: 'var(--rule)', color: 'var(--text-3)' }}
-              >
-                {t('routines.newBtn')}
-              </button>
             </>
           )}
         </div>
