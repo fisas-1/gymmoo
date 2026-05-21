@@ -421,5 +421,31 @@
   "friends.reactionMotivar": "🐄 Moo-tivat!",
   "friends.reactionEmpenyer": "🚀 Empès!",
   "friends.period30d": "30 dies",
-  "friends.users": "usuaris"
+  "friends.users": "usuaris",
+  "friends.tabFriends": "Amics",
+  "friends.tabSearch": "Cerca",
+  "friends.noFriendsYet": "Encara no tens amics. Cerca i afegeix-ne!",
+  "friends.findFriends": "Trobar amics",
+  "friends.addFriend": "Afegir amic",
+  "friends.pendingRequests": "Sol·licituds pendents",
+  "friends.wantsToBeYourFriend": "Vol ser el teu amic",
+  "friends.accept": "Acceptar",
+  "friends.reject": "Rebutjar",
+  "friends.pendingLabel": "Pendent",
+  "friends.friendLabel": "Amic",
+  "friends.removeFriend": "Eliminar amic",
+  "friends.unknownUser": "Usuari",
+
+  "perfil.exportTitle": "Exportar dades",
+  "perfil.exportCSV": "Entrenaments CSV",
+  "perfil.exportCSVDesc": "Tots els registres per importar a Excel",
+  "perfil.exportJSON": "Còpia de seguretat JSON",
+  "perfil.exportJSONDesc": "Backup complet: logs + rutines",
+  "perfil.exportBtn": "Descarregar",
+
+  "pwa.installTitle": "Instal·la gymmoo.",
+  "pwa.installDesc": "Afegeix l'app a la pantalla d'inici per accés ràpid sense navegador.",
+  "pwa.installDescIOS": "Toca compartir → «Afegir a pantalla d'inici» per instal·lar.",
+  "pwa.installBtn": "Instal·lar",
+  "pwa.dismissBtn": "Ara no"
 }

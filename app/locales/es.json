@@ -420,5 +420,31 @@
   "friends.reactionMotivar": "🐄 ¡Moo-tivado!",
   "friends.reactionEmpenyer": "🚀 ¡Empujado!",
   "friends.period30d": "30 días",
-  "friends.users": "usuarios"
+  "friends.users": "usuarios",
+  "friends.tabFriends": "Amigos",
+  "friends.tabSearch": "Buscar",
+  "friends.noFriendsYet": "Aún no tienes amigos. ¡Busca y añade!",
+  "friends.findFriends": "Buscar amigos",
+  "friends.addFriend": "Añadir amigo",
+  "friends.pendingRequests": "Solicitudes pendientes",
+  "friends.wantsToBeYourFriend": "Quiere ser tu amigo",
+  "friends.accept": "Aceptar",
+  "friends.reject": "Rechazar",
+  "friends.pendingLabel": "Pendiente",
+  "friends.friendLabel": "Amigo",
+  "friends.removeFriend": "Eliminar amigo",
+  "friends.unknownUser": "Usuario",
+
+  "perfil.exportTitle": "Exportar datos",
+  "perfil.exportCSV": "Entrenamientos CSV",
+  "perfil.exportCSVDesc": "Todos los registros, listo para Excel",
+  "perfil.exportJSON": "Copia de seguridad JSON",
+  "perfil.exportJSONDesc": "Backup completo: logs + rutinas",
+  "perfil.exportBtn": "Descargar",
+
+  "pwa.installTitle": "Instala gymmoo.",
+  "pwa.installDesc": "Añade la app a tu pantalla de inicio para acceso rápido sin navegador.",
+  "pwa.installDescIOS": "Pulsa compartir → «Añadir a pantalla de inicio» para instalar.",
+  "pwa.installBtn": "Instalar",
+  "pwa.dismissBtn": "Ahora no"
 }

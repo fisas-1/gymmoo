@@ -79,6 +79,8 @@ export default function PerfilPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false)
   const [avatarError, setAvatarError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const [exportingCSV, setExportingCSV] = useState(false)
+  const [exportingJSON, setExportingJSON] = useState(false)
 
   useEffect(() => {
     const savedUnit = localStorage.getItem('height_unit') as 'cm' | 'ftin'
@@ -351,6 +353,67 @@ export default function PerfilPage() {
 
     if (fileInputRef.current) fileInputRef.current.value = ''
     setUploadingAvatar(false)
+  }
+
+  async function handleExportCSV() {
+    if (!user) return
+    setExportingCSV(true)
+    try {
+      const { data: logs } = await supabase
+        .from('workout_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true })
+
+      const headers = ['Data', 'Exercici', 'Pes (kg)', 'Repeticions', 'RIR', '1RM estimat (kg)', 'Notes']
+      const rows = (logs || []).map(l => [
+        new Date(l.created_at).toLocaleDateString('ca-ES'),
+        l.exercise,
+        l.weight ?? 0,
+        l.reps,
+        l.rir ?? '',
+        l.one_rm ?? '',
+        l.note ?? '',
+      ])
+      const csv = [headers, ...rows]
+        .map(row => row.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+        .join('\n')
+      const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `gymmoo_entrenaments_${new Date().toISOString().slice(0, 10)}.csv`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setExportingCSV(false)
+    }
+  }
+
+  async function handleExportJSON() {
+    if (!user) return
+    setExportingJSON(true)
+    try {
+      const [{ data: logs }, { data: routines }] = await Promise.all([
+        supabase.from('workout_logs').select('*').eq('user_id', user.id).order('created_at', { ascending: true }),
+        supabase.from('routines').select('*').eq('user_id', user.id),
+      ])
+      const backup = {
+        exportedAt: new Date().toISOString(),
+        appVersion: 'gymmoo',
+        workoutLogs: logs || [],
+        routines: routines || [],
+      }
+      const blob = new Blob([JSON.stringify(backup, null, 2)], { type: 'application/json' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `gymmoo_backup_${new Date().toISOString().slice(0, 10)}.json`
+      a.click()
+      URL.revokeObjectURL(url)
+    } finally {
+      setExportingJSON(false)
+    }
   }
 
   const levelColor = LEVELS.find(l => l.key === overallLevel)?.color || 'var(--text-3)'
@@ -702,6 +765,43 @@ export default function PerfilPage() {
           >
             {saved ? `✓ ${t('perfil.saved')}` : t('perfil.save')}
           </button>
+        </div>
+
+        {/* Export / Backup */}
+        <div>
+          <p className="section-label mb-3">{t('perfil.exportTitle')}</p>
+          <div className="card-surface overflow-hidden divide-y divide-[var(--rule)]">
+            <div className="flex justify-between items-center px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-[var(--text)]">{t('perfil.exportCSV')}</p>
+                <p className="font-mono text-[10px] text-[var(--text-3)] mt-0.5">{t('perfil.exportCSVDesc')}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleExportCSV}
+                disabled={exportingCSV}
+                className="flex-shrink-0 ml-3 px-3.5 py-1.5 rounded-xl text-[12px] font-medium border transition-all hover:opacity-80 disabled:opacity-40"
+                style={{ color: 'var(--accent)', borderColor: 'color-mix(in srgb, var(--accent) 30%, transparent)', backgroundColor: 'color-mix(in srgb, var(--accent) 8%, transparent)' }}
+              >
+                {exportingCSV ? '…' : t('perfil.exportBtn')}
+              </button>
+            </div>
+            <div className="flex justify-between items-center px-4 py-3">
+              <div>
+                <p className="text-sm font-medium text-[var(--text)]">{t('perfil.exportJSON')}</p>
+                <p className="font-mono text-[10px] text-[var(--text-3)] mt-0.5">{t('perfil.exportJSONDesc')}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleExportJSON}
+                disabled={exportingJSON}
+                className="flex-shrink-0 ml-3 px-3.5 py-1.5 rounded-xl text-[12px] font-medium border transition-all hover:opacity-80 disabled:opacity-40"
+                style={{ color: 'var(--text-2)', borderColor: 'var(--rule)', backgroundColor: 'var(--card-hi)' }}
+              >
+                {exportingJSON ? '…' : t('perfil.exportBtn')}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Preferences */}
