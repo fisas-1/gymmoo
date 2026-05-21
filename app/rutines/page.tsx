@@ -814,9 +814,9 @@ export default function RutinesPage() {
         {/* Header */}
         <div className="px-5 pt-12 pb-0 flex items-end justify-between max-w-2xl mx-auto">
           <div>
-            <p className="section-label mb-1">les teves rutines</p>
+            <p className="section-label mb-1">{t('routines.yourRoutines')}</p>
             <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
-              Rutines.
+              {t('routines.title')}.
             </h1>
           </div>
           <button
@@ -824,16 +824,16 @@ export default function RutinesPage() {
             className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-medium text-white tap-scale"
             style={{ backgroundColor: 'var(--accent)' }}
           >
-            + Nova
+            + {t('routines.newShort')}
           </button>
         </div>
 
         {/* Filter pills */}
         <div className="flex gap-1.5 px-5 pt-4 pb-3 max-w-2xl mx-auto">
           {[
-            { id: 'all' as const, label: 'Totes', count: routines.length },
-            { id: 'fav' as const, label: 'Preferides', count: routines.filter(r => favoriteIds.includes(r.id)).length },
-            { id: 'deleted' as const, label: 'Eliminades', count: deletedRoutines.length },
+            { id: 'all' as const, label: t('routines.tabAll'), count: routines.length },
+            { id: 'fav' as const, label: t('routines.tabFavorites'), count: routines.filter(r => favoriteIds.includes(r.id)).length },
+            { id: 'deleted' as const, label: t('routines.tabDeleted'), count: deletedRoutines.length },
           ].map(tab => (
             <button
               key={tab.id}
@@ -852,7 +852,7 @@ export default function RutinesPage() {
         <div className="px-5 pb-6 max-w-2xl mx-auto">
           {/* This-week calendar */}
           <div className="card-surface px-3.5 py-3 mb-3">
-            <p className="section-label mb-2">aquesta setmana</p>
+            <p className="section-label mb-2">{t('routines.thisWeek')}</p>
             <div className="flex gap-1">
               {[0, 1, 2, 3, 4, 5, 6].map(d => {
                 const isToday = todayDow === d
@@ -895,7 +895,7 @@ export default function RutinesPage() {
           {/* Deleted tab */}
           {activeTab === 'deleted' ? (
             deletedRoutines.length === 0 ? (
-              <p className="text-[var(--text-3)] text-sm py-6 text-center">Cap rutina eliminada</p>
+              <p className="text-[var(--text-3)] text-sm py-6 text-center">{t('routines.noDeleted')}</p>
             ) : (
               <div className="space-y-2">
                 {deletedRoutines.map((dr, idx) => (
@@ -906,7 +906,7 @@ export default function RutinesPage() {
                   >
                     <p className="text-[var(--text)] font-medium text-[15px] truncate">{dr.name}</p>
                     <p className="text-[var(--text-3)] font-mono text-[10px] mt-0.5">
-                      {dr.exercises?.length || 0} exercicis · {new Date(dr.deletedAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
+                      {t('routines.exercisesCount', { count: String(dr.exercises?.length || 0) })} · {new Date(dr.deletedAt).toLocaleDateString(locale, { day: 'numeric', month: 'short' })}
                     </p>
                   </div>
                 ))}
@@ -916,7 +916,7 @@ export default function RutinesPage() {
             <>
               {filteredRoutines.length === 0 ? (
                 <p className="text-[var(--text-3)] text-sm py-6 text-center">
-                  {activeTab === 'fav' ? 'Cap rutina preferida' : t('routines.noRoutines')}
+                  {activeTab === 'fav' ? t('routines.noFavorites') : t('routines.noRoutines')}
                 </p>
               ) : (
                 <DndContext sensors={dndSensors} collisionDetection={closestCenter} onDragEnd={handleRoutineDragEnd}>
@@ -1228,7 +1228,7 @@ export default function RutinesPage() {
           onClick={handleBackToList}
           className="text-[var(--text-3)] hover:text-[var(--text)] text-sm transition-colors inline-flex items-center gap-1 mb-2"
         >
-          <span aria-hidden>‹</span> Rutines
+          <span aria-hidden>‹</span> {t('routines.title')}
         </button>
         <h1 className="text-[28px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
           {selectedRoutine?.name}

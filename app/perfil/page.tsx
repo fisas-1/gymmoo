@@ -345,7 +345,7 @@ export default function PerfilPage() {
       .maybeSingle()
 
     if (existing) {
-      setUsernameError('Aquest nom d\'usuari ja existeix')
+      setUsernameError(t('perfil.usernameExists'))
       setSavingUsername(false)
       return
     }
@@ -358,9 +358,9 @@ export default function PerfilPage() {
       setUsername(trimmed)
       setEditingUsername(false)
     } else if (error.code === '42501' || error.message?.includes('policy')) {
-      setUsernameError('Falta permís — contacta l\'administrador')
+      setUsernameError(t('perfil.permissionDenied'))
     } else {
-      setUsernameError('Error en desar el nom d\'usuari')
+      setUsernameError(t('perfil.saveUsernameError'))
     }
     setSavingUsername(false)
   }
@@ -403,7 +403,7 @@ export default function PerfilPage() {
     return (
       <div className="min-h-screen flex items-center justify-center px-6 bg-[var(--bg)]">
         <div className="text-center space-y-6 max-w-sm">
-          <p className="section-label mb-1">el teu perfil</p>
+          <p className="section-label mb-1">{t('perfil.yourProfile')}</p>
           <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
             {t('perfil.title')}
           </h1>
@@ -426,9 +426,9 @@ export default function PerfilPage() {
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
       <div className="px-5 pt-12 pb-0 max-w-2xl mx-auto">
-        <p className="section-label mb-1">el teu perfil</p>
+        <p className="section-label mb-1">{t('perfil.yourProfile')}</p>
         <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
-          Perfil.
+          {t('perfil.title')}
         </h1>
       </div>
 
@@ -437,7 +437,7 @@ export default function PerfilPage() {
         <div className="card-surface p-4 flex items-start gap-4">
           {/* Avatar */}
           <div className="relative flex-shrink-0">
-            <label className="cursor-pointer block" title="Canvia la foto de perfil">
+            <label className="cursor-pointer block" title={t('perfil.changeAvatar')}>
               <input
                 ref={fileInputRef}
                 type="file"
@@ -518,7 +518,7 @@ export default function PerfilPage() {
                 <button
                   onClick={() => { setUsernameInput(username || user.email?.split('@')[0] || ''); setEditingUsername(true) }}
                   className="flex-shrink-0 transition-all hover:opacity-75 text-[var(--text-3)]"
-                  aria-label="Editar nom d'usuari"
+                  aria-label={t('perfil.editUsername')}
                 >
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
@@ -852,7 +852,7 @@ export default function PerfilPage() {
                 aria-label={t(theme === 'dark' ? 'nav.theme_light' : 'nav.theme_dark')}
               >
                 <span className="text-base leading-none">{theme === 'dark' ? '☀️' : '🌙'}</span>
-                <span className="font-mono text-xs uppercase tracking-wider">{theme === 'dark' ? 'Light' : 'Dark'}</span>
+                <span className="font-mono text-xs uppercase tracking-wider">{theme === 'dark' ? t('nav.themeLightShort') : t('nav.themeDarkShort')}</span>
               </button>
             </div>
 

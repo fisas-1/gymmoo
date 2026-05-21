@@ -178,9 +178,9 @@ export default function EstadistiquesPage() {
     <div className="min-h-screen bg-[var(--bg)]">
       {/* Header */}
       <div className="px-5 pt-12 pb-0 max-w-2xl mx-auto">
-        <p className="section-label mb-1">el teu progrés</p>
+        <p className="section-label mb-1">{t('stats.yourProgress')}</p>
         <h1 className="text-[32px] font-semibold tracking-[-0.03em] leading-none text-[var(--text)]">
-          Estadístiques.
+          {t('stats.title')}.
         </h1>
       </div>
 
@@ -191,8 +191,8 @@ export default function EstadistiquesPage() {
           style={{ backgroundColor: 'var(--card-hi)', borderColor: 'var(--rule)' }}
         >
           {[
-            { key: '30', label: '1 mes' },
-            { key: '90', label: '3 mesos' },
+            { key: '30', label: t('stats.period1m') },
+            { key: '90', label: t('stats.period3m') },
             { key: 'all', label: t('stats.periodAll') },
           ].map((p) => (
             <button
@@ -295,9 +295,9 @@ export default function EstadistiquesPage() {
               <p className="section-label">{t('stats.weeklyVolume')}</p>
               <span className="font-mono text-[9px] flex items-center gap-1.5" style={{ color: 'var(--text-3)' }}>
                 <span className="inline-block w-1.5 h-1.5 rounded-full" style={{ backgroundColor: 'var(--rule)' }} />
-                ant
+                {t('stats.prevAbbr')}
                 <span className="inline-block w-1.5 h-1.5 rounded-full ml-1.5" style={{ backgroundColor: 'var(--accent)' }} />
-                ara
+                {t('stats.nowAbbr')}
               </span>
             </div>
             <div className="space-y-3">

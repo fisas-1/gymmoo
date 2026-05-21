@@ -128,10 +128,10 @@ export default function AmicsPage() {
 
   function handleReaction(userId: string, type: 'volt' | 'energia' | 'motivar' | 'empenyer') {
     const msgs: Record<string, string> = {
-      volt:     '⚡ Volt donat!',
-      energia:  '💉 Energia injectada!',
-      motivar:  '🐄 Moo-tivat!',
-      empenyer: '🚀 Empès!',
+      volt:     t('friends.reactionVolt'),
+      energia:  t('friends.reactionEnergia'),
+      motivar:  t('friends.reactionMotivar'),
+      empenyer: t('friends.reactionEmpenyer'),
     }
     setReactions(prev => ({ ...prev, [userId]: msgs[type] }))
     setTimeout(() => setReactions(prev => ({ ...prev, [userId]: null })), 2500)
@@ -200,9 +200,9 @@ export default function AmicsPage() {
         {/* Ranking */}
         <div>
           <div className="flex items-baseline justify-between mb-3">
-            <p className="section-label">{t('friends.ranking')} · 30 dies</p>
+            <p className="section-label">{t('friends.ranking')} · {t('friends.period30d')}</p>
             {sorted.length > 0 && (
-              <span className="font-mono text-[10px] text-[var(--text-3)]">{sorted.length} usuaris</span>
+              <span className="font-mono text-[10px] text-[var(--text-3)]">{sorted.length} {t('friends.users')}</span>
             )}
           </div>
 

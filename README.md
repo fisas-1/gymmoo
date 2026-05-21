@@ -1,4 +1,4 @@
-# SmartGym 💪
+# Gymmoo 💪
 
 Sistema de gestió d'entrenaments i rutines amb Next.js i Supabase.
 
@@ -160,4 +160,4 @@ Retorna la recomanació de pes per a un exercici i nombre de reps objectiu, basa
 
 ---
 
-*Desenvolupat amb ❤️ per SmartGym*
+*Desenvolupat amb ❤️ per Gymmoo*

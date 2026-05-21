@@ -1,10 +1,10 @@
 # Handoff: Gymmoo · App Redesign
 
 ## Overview
-Aquest paquet conté el redisseny complet de l'app **Gymmoo** (anteriorment SmartGym): home / quick-log, rutines, estadístiques, amics, perfil, més un sistema de logotip. L'objectiu és substituir l'UI actual (a `smartgym/app/`) per aquest nou sistema visual, mantenint tota la lògica de Supabase, contexts, i hooks que ja tens.
+Aquest paquet conté el redisseny complet de l'app **Gymmoo** (anteriorment SmartGym): home / quick-log, rutines, estadístiques, amics, perfil, més un sistema de logotip. L'objectiu és substituir l'UI actual (a `gymmoo/app/`) per aquest nou sistema visual, mantenint tota la lògica de Supabase, contexts, i hooks que ja tens.
 
 ## About the Design Files
-Els arxius `.html` i `.jsx` d'aquest bundle són **referències de disseny en HTML** — prototips que mostren el look i el comportament desitjat, NO codi de producció per copiar directament. La feina és **recrear aquests dissenys al teu codebase Next.js existent** (a `smartgym/app/`) usant els patrons que ja tens (Next App Router, Tailwind, contexts).
+Els arxius `.html` i `.jsx` d'aquest bundle són **referències de disseny en HTML** — prototips que mostren el look i el comportament desitjat, NO codi de producció per copiar directament. La feina és **recrear aquests dissenys al teu codebase Next.js existent** (a `gymmoo/app/`) usant els patrons que ja tens (Next App Router, Tailwind, contexts).
 
 Els arxius `.jsx` aquí dins són React amb estils inline + Babel inline. Al teu codebase real, vols passar-ho a Tailwind classes o a un sistema com CSS Modules / styled-components segons preferència.
 
