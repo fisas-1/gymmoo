@@ -221,6 +221,9 @@ export interface Routine {
   user_id: string
   name: string
   description?: string
+  is_favorite: boolean
+  scheduled_days: number[]
+  deleted_at: string | null
   created_at: string
   updated_at: string
 }

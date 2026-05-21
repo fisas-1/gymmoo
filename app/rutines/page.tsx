@@ -130,6 +130,7 @@ export default function RutinesPage() {
       const next = current.includes(day) ? current.filter(d => d !== day) : [...current, day].sort((a, b) => a - b)
       const updated = { ...prev, [routineId]: next }
       supabase.from('routines').update({ scheduled_days: next }).eq('id', routineId)
+        .then(({ error }) => { if (error) console.error('Error updating scheduled_days:', error.message) })
       return updated
     })
   }
@@ -193,15 +194,27 @@ export default function RutinesPage() {
 
   async function loadRoutines() {
     if (!user) return
-    const { data, error } = await supabase
+    let { data, error } = await supabase
       .from('routines')
       .select('*')
       .eq('user_id', user.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
 
+    // If deleted_at column doesn't exist yet (migration pending), retry without filter
+    if (error && (error.code === '42703' || error.message?.includes('deleted_at'))) {
+      const result = await supabase
+        .from('routines')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+      data = result.data
+      error = result.error
+    }
+
     if (error) {
       console.error('Error loading routines:', error)
+      setErrorMsg(t('routines.errorLoading') || 'Error carregant rutines')
       return
     }
     if (data) {
@@ -403,7 +416,12 @@ export default function RutinesPage() {
     const isFav = favoriteIds.includes(routineId)
     const next = isFav ? favoriteIds.filter(id => id !== routineId) : [...favoriteIds, routineId]
     setFavoriteIds(next)
-    await supabase.from('routines').update({ is_favorite: !isFav }).eq('id', routineId)
+    const { error } = await supabase.from('routines').update({ is_favorite: !isFav }).eq('id', routineId)
+    if (error) {
+      setFavoriteIds(prev => isFav ? [...prev, routineId] : prev.filter(id => id !== routineId))
+      setErrorMsg(t('routines.errorUpdating') + error.message)
+      return
+    }
     setSuccessMsg(isFav ? t('routines.removedFromFavorites') : t('routines.addedToFavorites'))
   }
 

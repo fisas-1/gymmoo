@@ -175,6 +175,7 @@
   "routines.deleteConfirm": "¿Seguro que quieres eliminar «{{name}}»?",
   "routines.deleted": "Rutina eliminada",
   "routines.errorDeleting": "Error al eliminar la rutina",
+  "routines.errorLoading": "Error cargando rutinas",
   "routines.favorite": "Favorita",
   "routines.unfavorite": "Quitar de favoritas",
   "routines.addedToFavorites": "Añadida a favoritas",
